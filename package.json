@@ -1,5 +1,5 @@
 {
-  "name": "sketchIt",
+  "name": "sketchit",
   "private": true,
   "scripts": {
     "build": "turbo run build",
