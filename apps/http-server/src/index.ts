@@ -2,8 +2,9 @@ import express from "express"
 import jwt from "jsonwebtoken"
 import { JWT_SECRET } from "@repo/backend-common/config"
 import { middleware } from "./middleware.js";
-import { CreateUserSchema, CreateRoomSchema, SigninSchema } from "@repo/common/types"
-import { prismaClient } from "@repo/db-common/client";
+import { CreateUserSchema,CreateRoomSchema, SigninSchema } from "@repo/common/types"
+import { prisma } from "@repo/db-common/client";
+
 
 const PORT = 3001
 const app = express();
@@ -21,7 +22,7 @@ app.post("/signup", async (req, res) => {
     }
 
     try {
-        const response = await prismaClient.user.create({
+        const response = await prisma.user.create({
             data: {
                 name:       parsedData.data.name,
                 email:      parsedData.data.username,
@@ -52,7 +53,7 @@ app.post("/signin", async (req, res) => {
         return 
     }
 
-    const response = await prismaClient.user.findFirst({
+    const response = await prisma.user.findFirst({
         where: {
             email:      parsedData.data.username,
             password:   parsedData.data.password
