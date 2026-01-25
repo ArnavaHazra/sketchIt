@@ -10,12 +10,6 @@ const app = express();
 
 app.use(express.json());
 
-app.get("/",(req,res)=>{
-    res.json({
-        message: "Server is active and listening on port 3001"
-    });
-});
-
 app.post("/signup", async (req, res) => {
 
     const parsedData = CreateUserSchema.safeParse(req.body)
@@ -94,7 +88,6 @@ app.post("/room", middleware, (req, res) => {
         roomId: 123
     })
 })
-
 
 app.listen(PORT, () => {
     console.log("Server is LIVE on PORT:", PORT)
