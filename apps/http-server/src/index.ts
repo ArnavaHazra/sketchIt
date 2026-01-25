@@ -39,7 +39,8 @@ app.post("/signup", async (req, res) => {
         })
         if(response) {
             res.status(201).json({
-            message: "success: User created"
+                message: "success: User created",
+                userId: response.id
             }) 
         }
     } catch (error:any) {
@@ -62,41 +63,73 @@ app.post("/signin", async (req, res) => {
         return 
     }
 
-    const response = await prisma.user.findFirst({
-        where: {
-            email:      parsedData.data.username,
-            password:   parsedData.data.password
-        }        
-    })
+    try {
+        const response = await prisma.user.findFirst({
+            where: {
+                email:      parsedData.data.username,
+                password:   parsedData.data.password
+            }        
+        })
 
-    if(!response) {
-        res.status(401).json({
-            message: "Unathorized"
+        if(!response) {
+            res.status(401).json({
+                message: "User not found"
+            })
+            return;
+        }
+
+        const token = jwt.sign({
+            userId: response?.id
+        }, JWT_SECRET)
+
+        res.status(200).json({
+            message: "Signin success",
+            token: token
+        })
+    } catch (error) {
+        res.status(411).json({
+            message: "Unauthorized"
+        })
+    }
+})
+
+app.post("/room", middleware, async (req, res) => {
+
+    const parsedData = CreateRoomSchema.safeParse(req.body)
+    if(!parsedData.success) {
+        res.status(403).json({
+            message: "Invalid inputs"
         })
         return;
     }
 
-    const token = jwt.sign({
-        userId: response?.id
-    }, JWT_SECRET)
-    res.status(200).json({
-        token: token
-    })
-})
-
-app.post("/room", middleware, (req, res) => {
-
-    const data = CreateRoomSchema.safeParse(req.body)
-    if(!data.success) {
-        res.json({
-            message: "Invalid inputs"
+    try {
+        //@ts-ignore
+        const userId = req.userId;
+        
+        const response = await prisma.room.create({
+            data: {
+                slug: parsedData.data.slug,
+                adminId: userId
+            }
         })
-        return 
+
+        if(!response) {
+            res.status(401).json({
+                message: "Room creation failed"
+            })
+            return;
+        }
+
+        res.status(200).json({
+            message: "Room created",
+            RoomName: response.slug 
+        })
+    } catch (error) {
+        res.status(411).json({
+            message: "Error creating Room"
+        })
     }
-    //TODO: db call
-    res.json({
-        roomId: 123
-    })
 })
 
 app.listen(PORT, () => {
