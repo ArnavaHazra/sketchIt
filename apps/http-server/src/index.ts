@@ -3,14 +3,22 @@ import jwt from "jsonwebtoken"
 import { JWT_SECRET } from "@repo/backend-common/config"
 import { middleware } from "./middleware.js";
 import { CreateUserSchema,CreateRoomSchema, SigninSchema } from "@repo/common/types"
-import  prismaClient  from "@repo/db-common/client"
+import {prisma} from "@repo/db";
 
 const PORT = 3001
 const app = express();
 
 app.use(express.json());
 
+app.get("/", (req, res) => {
+    res.json({
+        message: "----Server is LIVE-------"
+    })
+})
+
 app.post("/signup", async (req, res) => {
+
+    console.log(req.body);
 
     const parsedData = CreateUserSchema.safeParse(req.body)
     if(!parsedData.success) {
@@ -21,7 +29,7 @@ app.post("/signup", async (req, res) => {
     }
 
     try {
-        const response = await prismaClient.user.create({
+        const response = await prisma.user.create({
             data: {
                 name:       parsedData.data.name,
                 email:      parsedData.data.username,
@@ -34,9 +42,11 @@ app.post("/signup", async (req, res) => {
             message: "success: User created"
             }) 
         }
-    } catch (error) {
+    } catch (error:any) {
+        console.log(error.message)
+
         res.status(411).json({
-            message: "User with this credentials already exists"
+            message: "Error in Signup..."
         })
     }
   
@@ -52,7 +62,7 @@ app.post("/signin", async (req, res) => {
         return 
     }
 
-    const response = await prismaClient.user.findFirst({
+    const response = await prisma.user.findFirst({
         where: {
             email:      parsedData.data.username,
             password:   parsedData.data.password
