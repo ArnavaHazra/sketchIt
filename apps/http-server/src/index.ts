@@ -18,8 +18,6 @@ app.get("/", (req, res) => {
 
 app.post("/signup", async (req, res) => {
 
-    console.log(req.body);
-
     const parsedData = CreateUserSchema.safeParse(req.body)
     if(!parsedData.success) {
         res.json({
@@ -44,6 +42,7 @@ app.post("/signup", async (req, res) => {
             }) 
         }
     } catch (error:any) {
+        console.log("Error in signup route")
         console.log(error.message)
 
         res.status(411).json({
@@ -86,9 +85,12 @@ app.post("/signin", async (req, res) => {
             message: "Signin success",
             token: token
         })
-    } catch (error) {
+    } catch (error: any) {
+        console.log("Error in signin route")
+        console.log(error.message)
+
         res.status(411).json({
-            message: "Unauthorized"
+            message: "Unauthorized..."
         })
     }
 })
@@ -125,9 +127,38 @@ app.post("/room", middleware, async (req, res) => {
             message: "Room created",
             RoomName: response.slug 
         })
-    } catch (error) {
-        res.status(411).json({
+    } catch (error: any) {
+        console.log("Error in room route")
+        console.log(error.message)
+
+        res.status(500).json({
             message: "Error creating Room"
+        })
+    }
+})
+
+app.get("/chat/:roomId", async (req, res) => {
+    const roomId = Number(req.params.roomId)
+    try {
+        const message = await prisma.chat.findMany({
+            where: {
+                roomId: roomId             
+            },
+            orderBy:{
+                id: "desc"
+            },
+            take: 50
+        })
+
+        res.status(200).json({
+            message: message
+        })        
+    } catch (error: any) {
+        console.log("Error in chat route")
+        console.log(error.message)
+
+        res.status(500).json({
+            message: "Error getting messages"
         })
     }
 })
